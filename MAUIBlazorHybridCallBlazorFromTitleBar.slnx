@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/Solution items/">
+    <File Path="Acknowledgments.md" />
+    <File Path="CallBlazorFromTitleBar.png" />
+    <File Path="README.md" />
+  </Folder>
+  <Project Path="MAUIBlazorHybridCallBlazorFromTitleBar/MAUIBlazorHybridCallBlazorFromTitleBar.csproj" />
+</Solution>

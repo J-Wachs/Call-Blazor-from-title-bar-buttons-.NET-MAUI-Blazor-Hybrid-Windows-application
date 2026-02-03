@@ -1,0 +1,100 @@
+﻿@page "/weather"
+@using MAUIBlazorHybridCallBlazorFromTitleBar.Application.Interfaces
+@using MAUIBlazorHybridCallBlazorFromTitleBar.Helpers
+@implements IDisposable
+@inject ITitleBarService TitleBarService
+
+<h1>Weather</h1>
+
+<p>This component demonstrates showing data.</p>
+
+<p>Click on the '?' button in the title bar, to display the help dialog.</p>
+
+@if (forecasts == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th aria-label="Temperature in Celsius">Temp. (C)</th>
+                <th aria-label="Temperature in Fahrenheit">Temp. (F)</th>
+                <th>Summary</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var forecast in forecasts)
+            {
+                <tr>
+                    <td>@forecast.Date.ToShortDateString()</td>
+                    <td>@forecast.TemperatureC</td>
+                    <td>@forecast.TemperatureF</td>
+                    <td>@forecast.Summary</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<ModalDialog @ref="modalDialogHelp" Title="Help for Weather">
+    <p>This is a modal dialog opened from the title bar Help button.</p>
+    <p>This is implemented in the Weather.razor component, as it must show component specific help-text for this component.</p>
+    <p>You can put any content you like here.</p>
+</ModalDialog>
+
+@code {
+    private ModalDialog? modalDialogHelp { get; set; }
+
+    private WeatherForecast[]? forecasts;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Subscribe to the event from WinUI
+        TitleBarService.BlazorCalled += CalledFromTitleBarButton;
+
+        // Simulate asynchronous loading to demonstrate a loading indicator
+        await Task.Delay(500);
+
+        var startDate = DateOnly.FromDateTime(DateTime.Now);
+        var summaries = new[] { "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching" };
+        forecasts = Enumerable.Range(1, 5).Select(index => new WeatherForecast
+        {
+            Date = startDate.AddDays(index),
+            TemperatureC = Random.Shared.Next(-20, 55),
+            Summary = summaries[Random.Shared.Next(summaries.Length)]
+        }).ToArray();
+    }
+
+    /// <summary>
+    /// Handle the event from the TitleBarService when a button in the title bar is pressed.
+    /// </summary>
+    /// <param name="buttonId">Id of the button clicked in the Title Bar</param>
+    private async void CalledFromTitleBarButton(string buttonId)
+    {
+        if (buttonId is TitleBarButtonIds.Help && modalDialogHelp is not null)
+        {
+            await InvokeAsync(() =>
+            {
+                modalDialogHelp.Open();
+                StateHasChanged();
+            });
+        }
+    }
+
+    public void Dispose()
+    {
+        // Cancel the subscription to the event to avoid memory leaks.
+        TitleBarService.BlazorCalled -= CalledFromTitleBarButton;
+    }
+
+    private class WeatherForecast
+    {
+        public DateOnly Date { get; set; }
+        public int TemperatureC { get; set; }
+        public string? Summary { get; set; }
+        public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+    }
+}

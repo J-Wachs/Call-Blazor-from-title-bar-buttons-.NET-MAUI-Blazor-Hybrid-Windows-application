@@ -1,0 +1,115 @@
+﻿@using MAUIBlazorHybridCallBlazorFromTitleBar.Application.Interfaces
+@using MAUIBlazorHybridCallBlazorFromTitleBar.Helpers
+@implements IDisposable
+@inject ITitleBarService TitleBarService
+
+<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">MAUIBlazorHybridCallBlazorFromTitleBar</a>
+    </div>
+</div>
+
+<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+
+<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
+    <nav class="nav flex-column">
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="weather">
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
+            </NavLink>
+        </div>
+    </nav>
+</div>
+
+<ModalDialog @ref="modalDialogSettings" Title="Settings" OnClose="OnCloseModal">
+    <p>This is a modal dialog opened from the title bar Settings button.</p>
+    <p>As Settings should be globally available, it is implemented in the NavMenu.razor component.</p>
+    <p>You can put any content you like here.</p>
+</ModalDialog>
+
+<ModalDialog @ref="modalDialogSendMessage" Title="Send Message" OnClose="OnCloseModal">
+    <p>This is a modal dialog opened from the title bar Send Message button.</p>
+    <p>As Send Message should be globally available, it is implemented in the NavMenu.razor component.</p>
+    <p>You can put any content you like here.</p>
+</ModalDialog>
+
+@code {
+    private ModalDialog? modalDialogSettings { get; set; }
+    private ModalDialog? modalDialogSendMessage { get; set; }
+
+    protected override void OnInitialized()
+    {
+        // Subscribe to the event from WinUI
+        TitleBarService.BlazorCalled += CalledFromTitleBarButton;
+    }
+
+    /// <summary>
+    /// Display the appropriate modal dialog based on which button was pressed in the title bar.
+    /// They are implemented here in the NavMenu.razor component to make them globally available.
+    /// </summary>
+    /// <param name="buttonId">Id of the button clicked.</param>
+    private async void CalledFromTitleBarButton(string buttonId)
+    {
+        switch (buttonId)
+        {
+            case TitleBarButtonIds.Settings:
+                await InvokeAsync(() =>
+                {
+                    if (TitleBarTools.IsDisplayingModalDialog is true)
+                    {
+                        // A modal dialog is already displayed, do not open another one.
+                        return;
+                    }
+                    TitleBarTools.IsDisplayingModalDialog = true;
+
+                    if (modalDialogSettings is not null)
+                    {
+                        modalDialogSettings.Open();
+                        StateHasChanged();
+                    }
+                });
+                break;
+            case TitleBarButtonIds.SendMessage:
+                await InvokeAsync(() =>
+                {
+                    if (TitleBarTools.IsDisplayingModalDialog is true)
+                    {
+                        // A modal dialog is already displayed, do not open another one.
+                        return;
+                    }
+                    TitleBarTools.IsDisplayingModalDialog = true;
+                    if (modalDialogSendMessage is not null)
+                    {
+                        modalDialogSendMessage.Open();
+                        StateHasChanged();
+                    }
+                });
+                break;
+            default:
+                break;
+        }
+    }
+
+    /// <summary>
+    /// When closing the modal dialog, reset the flag indicating that a modal dialog is being displayed.
+    /// This is needed for opening subsequent modal dialogs.
+    /// </summary>
+    private void OnCloseModal()
+    {
+        TitleBarTools.IsDisplayingModalDialog = false;
+    }
+
+    /// <summary>
+    /// Cleanup at close-down.
+    /// </summary>
+    public void Dispose()
+    {
+        // Cancel the subscription to the event to avoid memory leaks.
+        TitleBarService.BlazorCalled -= CalledFromTitleBarButton;
+    }
+}
