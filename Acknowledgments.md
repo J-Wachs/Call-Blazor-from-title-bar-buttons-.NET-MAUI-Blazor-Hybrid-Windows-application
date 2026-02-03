@@ -1,7 +1,7 @@
 Dette repo indholder nedenstående dele fra tredje part.
 This repo contains the below mentioned parts from third party.
 
-1. Fonten/Yhe font FluentSystemIcons-Regular.ttf
+1. Fonten/The font FluentSystemIcons-Regular.ttf
 
 MIT License
 
